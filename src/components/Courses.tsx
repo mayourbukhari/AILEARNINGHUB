@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Clock, Users, Star, Play, BookOpen, CheckCircle, Lock, Filter, Search } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
 
 interface CoursesProps {
   featured?: boolean;
-  user?: any;
 }
 
-const Courses: React.FC<CoursesProps> = ({ featured = false, user }) => {
+const Courses: React.FC<CoursesProps> = ({ featured = false }) => {
+  const { user } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedLevel, setSelectedLevel] = useState('All');
   const [selectedCategory, setSelectedCategory] = useState('All');
@@ -39,11 +40,11 @@ const Courses: React.FC<CoursesProps> = ({ featured = false, user }) => {
       rating: 4.8,
       image: 'https://images.pexels.com/photos/8386440/pexels-photo-8386440.jpeg?auto=compress&cs=tinysrgb&w=400',
       topics: ['Supervised Learning', 'Unsupervised Learning', 'Model Evaluation'],
-      progress: user ? 65 : 0,
+      progress: user?.coursesCompleted >= 1 ? 65 : 0,
       category: 'Machine Learning',
       price: 'Free',
       instructor: 'Prof. Michael Chen',
-      enrolled: user ? true : false
+      enrolled: user?.coursesCompleted >= 1 ? true : false
     },
     {
       id: 3,
@@ -55,11 +56,11 @@ const Courses: React.FC<CoursesProps> = ({ featured = false, user }) => {
       rating: 4.9,
       image: 'https://images.pexels.com/photos/8386434/pexels-photo-8386434.jpeg?auto=compress&cs=tinysrgb&w=400',
       topics: ['Neural Networks', 'CNN', 'RNN', 'Transfer Learning'],
-      progress: user ? 25 : 0,
+      progress: user?.coursesCompleted >= 2 ? 25 : 0,
       category: 'Deep Learning',
       price: 'Premium',
       instructor: 'Dr. Emily Rodriguez',
-      enrolled: user ? true : false
+      enrolled: user?.coursesCompleted >= 2 ? true : false
     },
     {
       id: 4,

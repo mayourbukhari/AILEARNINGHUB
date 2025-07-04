@@ -19,15 +19,38 @@ export const useAuth = () => {
   return context;
 };
 
+// Mock database to store users
+const getUsersFromStorage = () => {
+  const users = localStorage.getItem('aiml_users_db');
+  return users ? JSON.parse(users) : [];
+};
+
+const saveUsersToStorage = (users: any[]) => {
+  localStorage.setItem('aiml_users_db', JSON.stringify(users));
+};
+
+const getCurrentUser = () => {
+  const currentUser = localStorage.getItem('aiml_current_user');
+  return currentUser ? JSON.parse(currentUser) : null;
+};
+
+const setCurrentUser = (user: User | null) => {
+  if (user) {
+    localStorage.setItem('aiml_current_user', JSON.stringify(user));
+  } else {
+    localStorage.removeItem('aiml_current_user');
+  }
+};
+
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     // Check for existing session
-    const savedUser = localStorage.getItem('aiml_user');
+    const savedUser = getCurrentUser();
     if (savedUser) {
-      setUser(JSON.parse(savedUser));
+      setUser(savedUser);
     }
     setLoading(false);
   }, []);
@@ -35,49 +58,68 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const login = async (email: string, password: string) => {
     setLoading(true);
     try {
-      // Simulate API call
+      // Simulate API call delay
       await new Promise(resolve => setTimeout(resolve, 1000));
       
-      // Mock user data - in real app, this would come from your backend
-      const userData: User = {
-        id: '1',
-        name: email === 'demo@aiml.com' ? 'Alex Chen' : 'Student User',
-        email,
-        avatar: 'https://images.pexels.com/photos/1239291/pexels-photo-1239291.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&fit=crop',
-        level: 'Intermediate',
-        xp: 2450,
-        streak: 7,
-        coursesCompleted: 8,
-        certificates: 3,
-        joinedAt: new Date().toISOString(),
-        lastActive: new Date().toISOString(),
-        preferences: {
-          theme: 'light',
-          notifications: true,
-          emailUpdates: true
-        },
-        stats: {
-          totalChallenges: 45,
-          completedChallenges: 23,
-          currentStreak: 7,
-          totalXP: 2450,
-          rank: 247,
-          accuracy: 94.2,
-          timeSpent: 156,
-          languageProgress: {
-            python: 85,
-            javascript: 72,
-            java: 45,
-            cpp: 38,
-            sql: 67
+      const users = getUsersFromStorage();
+      
+      // Check for demo account
+      if (email === 'demo@aiml.com' && password === 'demo123') {
+        const demoUser: User = {
+          id: 'demo',
+          name: 'Alex Chen (Demo)',
+          email: 'demo@aiml.com',
+          avatar: 'https://images.pexels.com/photos/1239291/pexels-photo-1239291.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&fit=crop',
+          level: 'Intermediate',
+          xp: 2450,
+          streak: 7,
+          coursesCompleted: 8,
+          certificates: 3,
+          joinedAt: new Date().toISOString(),
+          lastActive: new Date().toISOString(),
+          preferences: {
+            theme: 'light',
+            notifications: true,
+            emailUpdates: true
+          },
+          stats: {
+            totalChallenges: 45,
+            completedChallenges: 23,
+            currentStreak: 7,
+            totalXP: 2450,
+            rank: 247,
+            accuracy: 94.2,
+            timeSpent: 156,
+            languageProgress: {
+              python: 85,
+              javascript: 72,
+              java: 45,
+              cpp: 38,
+              sql: 67
+            }
           }
-        }
-      };
-
-      setUser(userData);
-      localStorage.setItem('aiml_user', JSON.stringify(userData));
+        };
+        
+        setUser(demoUser);
+        setCurrentUser(demoUser);
+        setLoading(false);
+        return;
+      }
+      
+      // Find user in our mock database
+      const existingUser = users.find((u: any) => u.email === email && u.password === password);
+      
+      if (!existingUser) {
+        throw new Error('Invalid email or password. Please check your credentials.');
+      }
+      
+      // Remove password from user object before setting state
+      const { password: _, ...userWithoutPassword } = existingUser;
+      
+      setUser(userWithoutPassword);
+      setCurrentUser(userWithoutPassword);
     } catch (error) {
-      throw new Error('Login failed. Please check your credentials.');
+      throw error;
     } finally {
       setLoading(false);
     }
@@ -86,10 +128,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signup = async (email: string, password: string, name: string) => {
     setLoading(true);
     try {
-      // Simulate API call
+      // Simulate API call delay
       await new Promise(resolve => setTimeout(resolve, 1000));
       
-      const userData: User = {
+      const users = getUsersFromStorage();
+      
+      // Check if user already exists
+      const existingUser = users.find((u: any) => u.email === email);
+      if (existingUser) {
+        throw new Error('An account with this email already exists. Please try logging in instead.');
+      }
+      
+      // Create new user
+      const newUser: User = {
         id: Date.now().toString(),
         name,
         email,
@@ -124,10 +175,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
       };
 
-      setUser(userData);
-      localStorage.setItem('aiml_user', JSON.stringify(userData));
+      // Save user with password to mock database
+      const userWithPassword = { ...newUser, password };
+      users.push(userWithPassword);
+      saveUsersToStorage(users);
+      
+      // Set current user (without password)
+      setUser(newUser);
+      setCurrentUser(newUser);
     } catch (error) {
-      throw new Error('Signup failed. Please try again.');
+      throw error;
     } finally {
       setLoading(false);
     }
@@ -135,7 +192,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const logout = () => {
     setUser(null);
-    localStorage.removeItem('aiml_user');
+    setCurrentUser(null);
   };
 
   const value = {

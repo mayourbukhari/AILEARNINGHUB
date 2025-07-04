@@ -1,19 +1,17 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Trophy, Target, Calendar, BookOpen, Code, Award, TrendingUp, Clock, Star, Users, Brain, Zap } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
 
-interface DashboardProps {
-  user: any;
-}
-
-const Dashboard: React.FC<DashboardProps> = ({ user }) => {
+const Dashboard: React.FC = () => {
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('overview');
 
   const stats = [
-    { label: 'Total XP', value: '2,450', icon: Trophy, color: 'text-yellow-500', change: '+120 this week' },
-    { label: 'Courses Completed', value: '8', icon: BookOpen, color: 'text-blue-500', change: '+2 this month' },
-    { label: 'Coding Hours', value: '156', icon: Code, color: 'text-purple-500', change: '+12 this week' },
-    { label: 'Certificates', value: '3', icon: Award, color: 'text-green-500', change: '+1 this month' },
+    { label: 'Total XP', value: user?.xp?.toLocaleString() || '0', icon: Trophy, color: 'text-yellow-500', change: '+120 this week' },
+    { label: 'Courses Completed', value: user?.coursesCompleted?.toString() || '0', icon: BookOpen, color: 'text-blue-500', change: '+2 this month' },
+    { label: 'Coding Hours', value: user?.stats?.timeSpent?.toString() || '0', icon: Code, color: 'text-purple-500', change: '+12 this week' },
+    { label: 'Certificates', value: user?.certificates?.toString() || '0', icon: Award, color: 'text-green-500', change: '+1 this month' },
   ];
 
   const recentActivity = [
@@ -25,16 +23,16 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
   ];
 
   const achievements = [
-    { title: 'First Steps', description: 'Complete your first course', earned: true, icon: '🎯', rarity: 'Common' },
-    { title: 'Code Warrior', description: 'Solve 10 coding challenges', earned: true, icon: '⚔️', rarity: 'Uncommon' },
-    { title: 'Speed Learner', description: 'Complete a course in under 3 days', earned: true, icon: '⚡', rarity: 'Rare' },
+    { title: 'First Steps', description: 'Complete your first course', earned: user?.coursesCompleted > 0, icon: '🎯', rarity: 'Common' },
+    { title: 'Code Warrior', description: 'Solve 10 coding challenges', earned: user?.stats?.completedChallenges >= 10, icon: '⚔️', rarity: 'Uncommon' },
+    { title: 'Speed Learner', description: 'Complete a course in under 3 days', earned: user?.coursesCompleted >= 3, icon: '⚡', rarity: 'Rare' },
     { title: 'ML Master', description: 'Complete all ML courses', earned: false, icon: '🧠', rarity: 'Epic' },
     { title: 'Community Helper', description: 'Help 50 fellow learners', earned: false, icon: '🤝', rarity: 'Rare' },
     { title: 'Research Pioneer', description: 'Publish an AI research paper', earned: false, icon: '🔬', rarity: 'Legendary' },
   ];
 
   const learningPath = [
-    { title: 'Python Fundamentals', progress: 100, status: 'completed', modules: 12, timeSpent: '24h' },
+    { title: 'Python Fundamentals', progress: user?.stats?.languageProgress?.python || 0, status: user?.stats?.languageProgress?.python >= 100 ? 'completed' : user?.stats?.languageProgress?.python > 0 ? 'in-progress' : 'locked', modules: 12, timeSpent: '24h' },
     { title: 'Machine Learning Basics', progress: 85, status: 'in-progress', modules: 15, timeSpent: '32h' },
     { title: 'Deep Learning', progress: 30, status: 'in-progress', modules: 20, timeSpent: '18h' },
     { title: 'Natural Language Processing', progress: 0, status: 'locked', modules: 18, timeSpent: '0h' },
@@ -56,7 +54,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center py-20">
         <div className="text-center max-w-md mx-auto px-4">
           <div className="w-20 h-20 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center mx-auto mb-6">
             <Brain className="w-10 h-10 text-white" />
@@ -65,9 +63,6 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
           <p className="text-gray-600 mb-6">
             Please sign in to access your personalized learning dashboard and track your progress.
           </p>
-          <button className="px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-lg font-semibold hover:from-blue-600 hover:to-purple-600 transition-all">
-            Sign In to Continue
-          </button>
         </div>
       </div>
     );
@@ -195,7 +190,10 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
                       <div className="text-lg font-semibold text-gray-900">Next Milestone</div>
                       <div className="text-sm text-gray-500">10 days streak</div>
                       <div className="w-32 h-2 bg-gray-200 rounded-full mt-2">
-                        <div className="w-3/4 h-2 bg-orange-500 rounded-full"></div>
+                        <div 
+                          className="bg-orange-500 h-2 rounded-full transition-all"
+                          style={{ width: `${(user.streak / 10) * 100}%` }}
+                        />
                       </div>
                     </div>
                   </div>
@@ -231,15 +229,15 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
                   <div className="space-y-4">
                     <div className="flex justify-between">
                       <span className="text-gray-600">Rank</span>
-                      <span className="font-semibold">#247</span>
+                      <span className="font-semibold">#{user.stats?.rank || 999}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-600">Study Time</span>
-                      <span className="font-semibold">74h this month</span>
+                      <span className="font-semibold">{user.stats?.timeSpent || 0}h this month</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-600">Accuracy</span>
-                      <span className="font-semibold">94.2%</span>
+                      <span className="font-semibold">{user.stats?.accuracy || 0}%</span>
                     </div>
                   </div>
                 </div>

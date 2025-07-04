@@ -1,12 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Play, Save, Download, Upload, BarChart3, Database, Code2, Terminal, RefreshCw, Settings, Maximize2, CheckCircle, Clock, Trophy, Target, BookOpen, Zap, TrendingUp, Award } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
 
-interface PlaygroundProps {
-  user?: any;
-}
-
-const Playground: React.FC<PlaygroundProps> = ({ user }) => {
+const Playground: React.FC = () => {
+  const { user } = useAuth();
   const [activeSection, setActiveSection] = useState('ml-playground');
   const [activeTab, setActiveTab] = useState('editor');
   const [isRunning, setIsRunning] = useState(false);
@@ -17,18 +15,18 @@ const Playground: React.FC<PlaygroundProps> = ({ user }) => {
   const [challengeProgress, setChallengeProgress] = useState({});
   const [userStats, setUserStats] = useState({
     totalChallenges: 45,
-    completedChallenges: 23,
-    currentStreak: 7,
-    totalXP: 2450,
-    rank: 247,
-    accuracy: 94.2,
-    timeSpent: 156,
-    languageProgress: {
-      python: 85,
-      javascript: 72,
-      java: 45,
-      cpp: 38,
-      sql: 67
+    completedChallenges: user?.stats?.completedChallenges || 0,
+    currentStreak: user?.streak || 0,
+    totalXP: user?.xp || 0,
+    rank: user?.stats?.rank || 999,
+    accuracy: user?.stats?.accuracy || 0,
+    timeSpent: user?.stats?.timeSpent || 0,
+    languageProgress: user?.stats?.languageProgress || {
+      python: 0,
+      javascript: 0,
+      java: 0,
+      cpp: 0,
+      sql: 0
     }
   });
   
@@ -115,14 +113,14 @@ print("📈 Ready for visualization in the Charts tab")
 
   const programmingChallenges = {
     python: [
-      { id: 'py1', title: 'Two Sum', difficulty: 'Easy', category: 'Arrays', completed: true, xp: 50 },
-      { id: 'py2', title: 'Fibonacci Sequence', difficulty: 'Easy', category: 'Recursion', completed: true, xp: 50 },
+      { id: 'py1', title: 'Two Sum', difficulty: 'Easy', category: 'Arrays', completed: user?.stats?.completedChallenges >= 1, xp: 50 },
+      { id: 'py2', title: 'Fibonacci Sequence', difficulty: 'Easy', category: 'Recursion', completed: user?.stats?.completedChallenges >= 2, xp: 50 },
       { id: 'py3', title: 'Binary Search', difficulty: 'Medium', category: 'Algorithms', completed: false, xp: 100 },
       { id: 'py4', title: 'Merge Sort', difficulty: 'Medium', category: 'Sorting', completed: false, xp: 100 },
       { id: 'py5', title: 'Graph Traversal', difficulty: 'Hard', category: 'Graphs', completed: false, xp: 200 },
     ],
     javascript: [
-      { id: 'js1', title: 'DOM Manipulation', difficulty: 'Easy', category: 'Web Dev', completed: true, xp: 50 },
+      { id: 'js1', title: 'DOM Manipulation', difficulty: 'Easy', category: 'Web Dev', completed: user?.stats?.languageProgress?.javascript >= 20, xp: 50 },
       { id: 'js2', title: 'Async/Await', difficulty: 'Medium', category: 'Promises', completed: false, xp: 100 },
       { id: 'js3', title: 'React Component', difficulty: 'Medium', category: 'React', completed: false, xp: 100 },
       { id: 'js4', title: 'API Integration', difficulty: 'Hard', category: 'Backend', completed: false, xp: 200 },
@@ -138,7 +136,7 @@ print("📈 Ready for visualization in the Charts tab")
       { id: 'cpp3', title: 'Template Programming', difficulty: 'Hard', category: 'Templates', completed: false, xp: 200 },
     ],
     sql: [
-      { id: 'sql1', title: 'Basic Queries', difficulty: 'Easy', category: 'SELECT', completed: true, xp: 50 },
+      { id: 'sql1', title: 'Basic Queries', difficulty: 'Easy', category: 'SELECT', completed: user?.stats?.languageProgress?.sql >= 20, xp: 50 },
       { id: 'sql2', title: 'Joins & Subqueries', difficulty: 'Medium', category: 'Advanced Queries', completed: false, xp: 100 },
       { id: 'sql3', title: 'Database Design', difficulty: 'Hard', category: 'Schema Design', completed: false, xp: 200 },
     ]
@@ -381,9 +379,6 @@ print(f"Test Accuracy: {test_accuracy:.4f}")`
           <p className="text-gray-600 mb-6">
             Please sign in to access the Interactive Playground and start your coding journey.
           </p>
-          <button className="px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-lg font-semibold hover:from-blue-600 hover:to-purple-600 transition-all">
-            Sign In to Continue
-          </button>
         </div>
       </div>
     );

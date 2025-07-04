@@ -28,6 +28,9 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onSwitchToSign
       await login(email, password);
       toast.success('Welcome back! 🎉');
       onClose();
+      // Reset form
+      setEmail('');
+      setPassword('');
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Login failed');
     }
@@ -38,9 +41,19 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onSwitchToSign
       await login('demo@aiml.com', 'demo123');
       toast.success('Welcome to the demo! 🚀');
       onClose();
+      // Reset form
+      setEmail('');
+      setPassword('');
     } catch (error) {
       toast.error('Demo login failed');
     }
+  };
+
+  const handleClose = () => {
+    setEmail('');
+    setPassword('');
+    setShowPassword(false);
+    onClose();
   };
 
   if (!isOpen) return null;
@@ -56,7 +69,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onSwitchToSign
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-2xl font-bold text-gray-900">Welcome Back</h2>
           <button
-            onClick={onClose}
+            onClick={handleClose}
             className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
           >
             <X className="w-5 h-5" />
@@ -149,6 +162,12 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onSwitchToSign
             Sign up here
           </button>
         </p>
+
+        <div className="mt-4 p-3 bg-blue-50 rounded-lg">
+          <p className="text-xs text-blue-800">
+            <strong>Demo Account:</strong> email: demo@aiml.com, password: demo123
+          </p>
+        </div>
       </motion.div>
     </div>
   );

@@ -1,12 +1,10 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { MessageCircle, Users, Heart, Share2, BookOpen, Code, Trophy, Star, Plus, Search, Filter } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
 
-interface CommunityProps {
-  user?: any;
-}
-
-const Community: React.FC<CommunityProps> = ({ user }) => {
+const Community: React.FC = () => {
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('discussions');
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
